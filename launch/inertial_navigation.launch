@@ -1,0 +1,54 @@
+  <launch>
+
+<!--启动电机-->
+  <node pkg="motion_control" type="motor_controller"
+        name="motor_controller" >
+  </node>
+
+  <node pkg="motion_control" type="base_controller"
+        name="base_controller" >
+   </node>
+
+<!--启动陀螺仪-->
+  <node pkg="alubi" type="alubi_nav"
+        name="alubi_nav" >
+  </node>
+
+<!--加载地图-->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find motion_control)/maps/office.yaml" />
+
+<!--启动激光雷达-->
+  <include file="$(find laser_node)/launch/blue_LMS5xx.launch"/>
+
+<!--TF变换-->
+  <node pkg="tf" type="static_transform_publisher" name="laser_to_base_link" args="0.16 0.0 0.24 0.0 0.0 3.14  /base_link /laser 100" />
+  
+  <node pkg="tf" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 /map /odom_combined 100" />
+  <node pkg="tf" type="static_transform_publisher" name="pgv_to_base_link" args="0.12 0.0 0.08 0.0 0.0 0  /base_link /pgv 100" />
+  
+<!--速度平滑滤波-->
+  <include file="$(find motion_control)/launch/bringup_smoother.launch"/>
+
+<!--扩展卡尔曼滤波-->
+  <include file="$(find motion_control)/launch/robot_post_ekf_start.launch" />
+
+<!--启动move_base-->
+  <include file="$(find motion_control)/launch/teb_move_base.launch"/>
+
+<!--启动PGV-->
+    <node pkg="pgv" type="pgv_inertial" name="pgv_inertial" >
+
+<!--启动位姿修正-->
+    <node pkg="navigation_goals" type="fix_pose" name="fix_pose" >
+
+<!--启动定点导航-->
+    <node pkg="navigation_goals" type="send_goal" name="send_goal" >
+
+<!--启动rviz-->
+    <node pkg="rviz" type="rviz"
+        name="rviz" >
+ </node>
+</launch>
+
+
+
